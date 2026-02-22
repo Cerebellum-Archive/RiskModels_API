@@ -1,0 +1,818 @@
+openapi: 3.0.3
+info:
+  title: RiskModels API
+  version: 2.0.0-agent
+  description: >
+    Institutional-grade equity risk analysis for AI agents and quantitative applications.
+    Provides daily factor hedge ratios, explained-risk decompositions, and portfolio-level
+    risk attribution for ~3,000 US equities.
+
+
+    **Data**: Universe `uni_mc_3000` (top ~3,000 US stocks by market cap), date range
+    2006-01-04 to present, updated daily end-of-day. Backend: Zarr v2 on Google Cloud Storage,
+    computed by the ERM3 regression system (Huber/Ridge).
+
+
+    **Pricing**: Per-request billing with prepaid balance. Cached responses are free.
+    Check `_agent.cost_usd` in each response body, or the `X-API-Cost-USD` response header.
+
+  contact:
+    name: RiskModels Support
+    email: api-support@riskmodels.net
+    url: https://riskmodels.net
+
+  license:
+    name: Commercial
+    url: https://riskmodels.net/terms
+
+servers:
+  - url: https://riskmodels.net/api
+    description: Production
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: rm_agent_{environment}_{random}_{checksum}
+      description: >
+        API key in format `rm_agent_{live|test}_{random}_{checksum}`.
+        Obtain via `POST /api/auth/provision` or from riskmodels.net/settings → API Keys.
+        Include as: `Authorization: Bearer rm_agent_live_...`
+
+  schemas:
+    AgentMeta:
+      type: object
+      description: Per-request billing and telemetry metadata appended to metered responses.
+      properties:
+        cost_usd:
+          type: number
+          format: float
+          description: Cost deducted from prepaid balance for this request. 0 if served from cache.
+          example: 0.005
+        latency_ms:
+          type: integer
+          description: Server processing time in milliseconds.
+          example: 145
+        request_id:
+          type: string
+          description: Unique request identifier for support lookups.
+          example: req_abc123xyz
+        confidence:
+          type: object
+          properties:
+            overall:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 1
+              example: 0.98
+            factors:
+              type: object
+              additionalProperties:
+                type: number
+        data_freshness:
+          type: string
+          format: date-time
+          description: ISO timestamp of the data's as-of datetime.
+          example: "2026-02-21T10:30:00Z"
+        billing_code:
+          type: string
+          description: Internal billing classification for this request type.
+          example: ticker_returns_v2
+        cache_status:
+          type: string
+          enum: [HIT, MISS, BYPASS]
+          description: Whether this response was served from cache.
+
+    TickerMetrics:
+      type: object
+      description: Latest risk metrics snapshot for a single ticker.
+      properties:
+        ticker:
+          type: string
+          example: NVDA
+        symbol:
+          type: string
+          example: NVDA
+        date:
+          type: string
+          format: date
+          example: "2026-02-21"
+        volatility:
+          type: number
+          format: float
+          nullable: true
+          description: Annualised realised volatility as a decimal fraction (e.g. 0.32 = 32%).
+          example: 0.48
+        sharpe_ratio:
+          type: number
+          format: float
+          nullable: true
+          example: 1.82
+        l1_market_hr:
+          type: number
+          format: float
+          nullable: true
+          description: "SPY hedge ratio for L1 (market-only) hedge. Unit: dollar_ratio."
+          example: 1.72
+        l1_market_er:
+          type: number
+          format: float
+          nullable: true
+          description: Fraction of variance explained by market factor at L1 (R-squared).
+          example: 0.42
+        l2_market_hr:
+          type: number
+          format: float
+          nullable: true
+          example: 1.41
+        l2_sector_hr:
+          type: number
+          format: float
+          nullable: true
+          example: 0.31
+        l2_market_er:
+          type: number
+          format: float
+          nullable: true
+          example: 0.38
+        l2_sector_er:
+          type: number
+          format: float
+          nullable: true
+          example: 0.09
+        l3_market_hr:
+          type: number
+          format: float
+          nullable: true
+          example: 1.28
+        l3_sector_hr:
+          type: number
+          format: float
+          nullable: true
+          example: 0.24
+        l3_subsector_hr:
+          type: number
+          format: float
+          nullable: true
+          description: "Can be negative (long position). Unit: dollar_ratio."
+          example: -0.06
+        l3_market_er:
+          type: number
+          format: float
+          nullable: true
+          example: 0.35
+        l3_sector_er:
+          type: number
+          format: float
+          nullable: true
+          example: 0.07
+        l3_subsector_er:
+          type: number
+          format: float
+          nullable: true
+          example: 0.04
+        l3_residual_er:
+          type: number
+          format: float
+          nullable: true
+          description: Idiosyncratic variance fraction — cannot be hedged with ETFs.
+          example: 0.54
+        bw_sector_code:
+          type: integer
+          nullable: true
+          description: Barra World sector classification code.
+        fs_sector_code:
+          type: integer
+          nullable: true
+          description: FactSet sector code.
+        fs_industry_code:
+          type: integer
+          nullable: true
+          description: FactSet industry code.
+        market_cap:
+          type: number
+          format: float
+          nullable: true
+          description: Market capitalisation in USD.
+          example: 3200000000000
+        close_price:
+          type: number
+          format: float
+          nullable: true
+          description: Most recent closing price in USD.
+          example: 131.50
+
+    TickerReturnsRow:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2026-02-21"
+        stock:
+          type: number
+          format: float
+          description: Daily gross return of the stock.
+          example: 0.0234
+        l1:
+          type: number
+          format: float
+          description: Rolling L1 combined market hedge ratio for that day.
+          example: 1.71
+        l2:
+          type: number
+          format: float
+          description: Rolling L2 combined hedge ratio (market + sector).
+          example: 1.69
+        l3:
+          type: number
+          format: float
+          description: Rolling L3 combined hedge ratio (market + sector + subsector).
+          example: 1.61
+
+    TickerReturnsMeta:
+      type: object
+      properties:
+        market_etf:
+          type: string
+          example: SPY
+        sector_etf:
+          type: string
+          example: SOXX
+        subsector_etf:
+          type: string
+          example: XSD
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code.
+          example: TICKER_NOT_FOUND
+        message:
+          type: string
+          description: Human-readable error description with suggested action.
+          example: "Ticker 'XYZABC' not found in universe 'uni_mc_3000'. Check ticker spelling or try a different universe."
+        code:
+          type: integer
+          description: HTTP status code.
+          example: 404
+        details:
+          type: object
+          properties:
+            field:
+              type: string
+              example: ticker
+            received:
+              type: string
+              example: XYZABC
+            universe:
+              type: string
+              example: uni_mc_3000
+            suggestion:
+              type: string
+              example: "Check for typos or use ticker search endpoint"
+
+security:
+  - BearerAuth: []
+
+paths:
+
+  /metrics/{ticker}:
+    get:
+      summary: Latest risk metrics snapshot
+      description: >
+        Returns the most recent row from `ticker_factor_metrics` for the given ticker.
+        Includes all 6 hedge ratios (HR), 7 explained-risk fractions (ER), volatility,
+        Sharpe ratio, sector codes, market cap, and close price.
+      operationId: getMetrics
+      tags: [Risk Metrics]
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Ticker symbol (case-insensitive).
+          example: NVDA
+      responses:
+        "200":
+          description: Latest metrics snapshot.
+          headers:
+            X-API-Cost-USD:
+              schema: {type: string}
+              description: Cost deducted for this request (e.g. "0.005").
+            X-Cache-Status:
+              schema: {type: string, enum: [HIT, MISS, BYPASS]}
+            X-Data-Freshness:
+              schema: {type: string, format: date-time}
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TickerMetrics"
+        "404":
+          description: Ticker not found in universe.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /ticker-returns:
+    get:
+      summary: Daily returns time series with rolling hedge ratios
+      description: >
+        Returns a daily time series of gross stock returns and rolling L1/L2/L3 combined
+        hedge ratios going back up to 15 years. The `l1/l2/l3` columns are the combined
+        (rolling) hedge ratios for each day — for the six separate HR components use
+        `/metrics/{ticker}`. Cost: $0.005/call regardless of years pulled.
+      operationId: getTickerReturns
+      tags: [Risk Metrics]
+      parameters:
+        - name: ticker
+          in: query
+          required: true
+          schema:
+            type: string
+          example: NVDA
+        - name: years
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 15
+            default: 1
+          description: Number of years of history to return.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Maximum number of rows to return.
+        - name: nocache
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Bypass cache (incurs cost even if identical request was recently made).
+      responses:
+        "200":
+          description: Time series of daily returns and rolling hedge ratios.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: "#/components/schemas/TickerReturnsMeta"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TickerReturnsRow"
+                  _agent:
+                    $ref: "#/components/schemas/AgentMeta"
+        "404":
+          description: Ticker not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /l3-decomposition:
+    get:
+      summary: Monthly L3 factor decomposition time series
+      description: >
+        Returns monthly historical explained-risk fractions (ER) for all four L3 components:
+        market, sector, subsector, and residual. Response is columnar (arrays, not rows) for
+        efficient numerical processing. Cost: $0.005/call.
+      operationId: getL3Decomposition
+      tags: [Risk Metrics]
+      parameters:
+        - name: ticker
+          in: query
+          required: true
+          schema:
+            type: string
+          example: NVDA
+        - name: market_factor_etf
+          in: query
+          required: false
+          schema:
+            type: string
+            default: SPY
+          description: Market factor ETF to use in decomposition.
+        - name: universe
+          in: query
+          required: false
+          schema:
+            type: string
+            default: uni_mc_3000
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Start date (ISO 8601). Defaults to earliest available.
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: End date (ISO 8601). Defaults to most recent.
+      responses:
+        "200":
+          description: Columnar monthly ER time series.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dates:
+                    type: array
+                    items:
+                      type: string
+                      format: date
+                  l3_market_er:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    nullable: true
+                  l3_sector_er:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    nullable: true
+                  l3_subsector_er:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    nullable: true
+                  l3_residual_er:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    nullable: true
+                  l3_market_hr:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    nullable: true
+                  l3_sector_hr:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    nullable: true
+                  l3_subsector_hr:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    nullable: true
+                  market_factor_etf:
+                    type: string
+                    example: SPY
+                  universe:
+                    type: string
+                    example: uni_mc_3000
+                  _agent:
+                    $ref: "#/components/schemas/AgentMeta"
+
+  /batch/analyze:
+    post:
+      summary: Multi-ticker batch analysis (25% discount)
+      description: >
+        Fetch metrics for up to 100 tickers in a single call. 25% cheaper per position
+        than individual `/metrics/{ticker}` calls. Cost: $0.002/position, minimum $0.01/call.
+        Supported metrics: `returns`, `l3_decomposition`, `hedge_ratios`.
+      operationId: batchAnalyze
+      tags: [Risk Metrics]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tickers, metrics]
+              properties:
+                tickers:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 100
+                  description: List of ticker symbols. Maximum 100.
+                  example: ["AAPL", "MSFT", "NVDA", "GOOGL"]
+                metrics:
+                  type: array
+                  items:
+                    type: string
+                    enum: [returns, l3_decomposition, hedge_ratios]
+                  description: Which data types to fetch for each ticker.
+                  example: ["hedge_ratios"]
+                years:
+                  type: integer
+                  minimum: 1
+                  maximum: 15
+                  default: 1
+                  description: Number of years of history (applies to `returns` and `l3_decomposition`).
+      responses:
+        "200":
+          description: Batch results keyed by ticker.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+                          enum: [success, error, not_found]
+                        hedge_ratios:
+                          type: object
+                          nullable: true
+                          description: "Null if ticker not found. Keys: l1_market, l2_market, l2_sector, l3_market, l3_sector, l3_subsector."
+                        returns:
+                          type: array
+                          nullable: true
+                          items:
+                            $ref: "#/components/schemas/TickerReturnsRow"
+                        l3_decomposition:
+                          type: object
+                          nullable: true
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      success:
+                        type: integer
+                      errors:
+                        type: integer
+                  _agent:
+                    $ref: "#/components/schemas/AgentMeta"
+        "400":
+          description: Invalid request body or too many tickers (> 100).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tickers:
+    get:
+      summary: Ticker universe search
+      description: >
+        List tickers in the universe or search by name/symbol. Free endpoint (no charge).
+        Use the `mag7` flag to retrieve the MAG7 tickers. Use `include_metadata` for
+        sector and ETF assignment per ticker.
+      operationId: getTickers
+      tags: [Utility]
+      security: []
+      parameters:
+        - name: array
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ticker, teo]
+          description: "`ticker` returns all ticker symbols. `teo` returns valid trading dates."
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search string matched against ticker symbol or company name.
+          example: NVDA
+        - name: mag7
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Return only MAG7 tickers (AAPL, MSFT, NVDA, GOOGL, AMZN, META, TSLA).
+        - name: include_metadata
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Include sector, sector ETF, and subsector ETF per ticker.
+      responses:
+        "200":
+          description: Ticker list or search results.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickers:
+                    type: array
+                    items:
+                      type: string
+                    example: ["AAPL", "MSFT", "NVDA"]
+                  metadata:
+                    type: object
+                    nullable: true
+                    additionalProperties:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        sector:
+                          type: string
+                        sector_etf:
+                          type: string
+                        subsector_etf:
+                          type: string
+
+  /health:
+    get:
+      summary: Service health check
+      description: Returns current service status, version, and capability availability. Free, no auth required.
+      operationId: getHealth
+      tags: [Utility]
+      security: []
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [up, degraded, down]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: 2.0.0-agent
+                  services:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  capabilities:
+                    type: object
+
+  /balance:
+    get:
+      summary: Account balance and rate limits
+      description: Returns current prepaid balance, account status, and rate-limit settings for the authenticated token.
+      operationId: getBalance
+      tags: [Account]
+      responses:
+        "200":
+          description: Account balance and status.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: user@example.com
+                  balance_usd:
+                    type: number
+                    format: float
+                    example: 24.85
+                  currency:
+                    type: string
+                    example: USD
+                  account_type:
+                    type: string
+                    example: pay_as_you_go
+                  status:
+                    type: object
+                    properties:
+                      account:
+                        type: string
+                        example: active
+                      billing:
+                        type: string
+                        example: ok
+                      can_make_requests:
+                        type: boolean
+                  limits:
+                    type: object
+                    properties:
+                      rate_limit_per_minute:
+                        type: integer
+                        example: 60
+                      daily_request_limit:
+                        type: integer
+                        nullable: true
+                  last_updated:
+                    type: string
+                    format: date-time
+
+  /invoices:
+    get:
+      summary: Invoice history and spend summary
+      description: Returns paginated invoice history and a summary of spend by period (month/quarter/year).
+      operationId: getInvoices
+      tags: [Account]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+          description: Maximum number of invoices to return.
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [month, quarter, year]
+            default: month
+          description: Aggregation period for spend summary.
+      responses:
+        "200":
+          description: Invoice list and spend summary.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invoices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+                        amount_usd:
+                          type: number
+                          format: float
+                  summary:
+                    type: object
+                    properties:
+                      period:
+                        type: string
+                      total_invoices:
+                        type: integer
+                      total_spent_usd:
+                        type: number
+                        format: float
+                      total_requests:
+                        type: integer
+                      current_period_cost_usd:
+                        type: number
+                        format: float
+
+  /auth/provision:
+    post:
+      summary: Provision an API key
+      description: >
+        Exchange a valid session JWT for a long-lived Bearer API key in format
+        `rm_agent_{live|test}_{random}_{checksum}`. Intended for AI agents that need
+        a stable key for repeated calls.
+      operationId: provisionToken
+      tags: [Authentication]
+      responses:
+        "200":
+          description: New API key provisioned.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_key:
+                    type: string
+                    example: rm_agent_live_a1b2c3d4_xyz789
+                  environment:
+                    type: string
+                    enum: [live, test]
+                  created_at:
+                    type: string
+                    format: date-time
+
+tags:
+  - name: Risk Metrics
+    description: ERM3 factor hedge ratios, explained risk, and return decompositions.
+  - name: Utility
+    description: Ticker search, health, and service discovery.
+  - name: Account
+    description: Balance, billing, and invoice management.
+  - name: Authentication
+    description: API key provisioning.
