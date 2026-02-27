@@ -10,7 +10,8 @@ info:
 
     **Data**: Universe `uni_mc_3000` (top ~3,000 US stocks by market cap), date range
     2006-01-04 to present, updated daily end-of-day. Backend: Zarr v2 on Google Cloud Storage,
-    computed by the ERM3 regression system (Huber/Ridge).
+    computed by the ERM3 regression system (Huber/Ridge). Supabase tables `erm3_betas` and
+    `erm3_rankings` provide factor betas and ticker rankings for direct DB and API use.
 
 
     **Pricing**: Per-request billing with prepaid balance. Cached responses are free.
@@ -806,6 +807,64 @@ paths:
                   created_at:
                     type: string
                     format: date-time
+
+  /telemetry:
+    get:
+      summary: Telemetry metrics
+      description: >
+        Performance and reliability metrics for API capabilities. Optional filter by
+        capability and number of days. Cost: $0.002/call.
+      operationId: getTelemetry
+      tags: [Utility]
+      parameters:
+        - name: capability
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Specific capability id to get metrics for.
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 30
+            minimum: 1
+            maximum: 90
+          description: Number of days of historical data.
+      responses:
+        "200":
+          description: Telemetry metrics for the requested period.
+
+  /chat:
+    post:
+      summary: AI Risk Analyst
+      description: >
+        Natural language risk analysis via conversational AI (GPT-4). Request body
+        includes messages array and optional model (default gpt-4o-mini). Billed per token.
+      operationId: postChat
+      tags: [Risk Metrics]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    required: [role, content]
+                    properties:
+                      role: { type: string, enum: [user, assistant] }
+                      content: { type: string }
+                model:
+                  type: string
+                  description: AI model to use (default gpt-4o-mini)
+      responses:
+        "200":
+          description: Assistant reply and optional tool calls.
 
 tags:
   - name: Risk Metrics

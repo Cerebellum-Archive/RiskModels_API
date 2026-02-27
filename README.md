@@ -70,15 +70,19 @@ curl -X GET "https://riskmodels.net/api/metrics/NVDA" \
 |---|---|---|---|
 | `/api/ticker-returns` | GET | Daily returns + rolling L1/L2/L3 hedge ratios, up to 15y | $0.005/call |
 | `/api/metrics/{ticker}` | GET | Latest snapshot: all 22 HR/ER fields, vol, Sharpe, sector, market cap | $0.005/call |
-| `/api/l3-decomposition` | GET | Monthly historical HR/ER time series | $0.005/call |
+| `/api/l3-decomposition` | GET | Monthly historical HR/ER time series | $0.01/call |
 | `/api/batch/analyze` | POST | Multi-ticker batch up to 100, 25% cheaper per position | $0.002/position |
-| `/api/tickers` | GET | Ticker universe search, MAG7 shortcut | Free |
+| `/api/tickers` | GET | Ticker universe search, MAG7 shortcut | $0.001/call |
+| `/api/telemetry` | GET | Performance and reliability metrics by capability | $0.002/call |
+| `/api/chat` | POST | AI Risk Analyst — natural language risk Q&A (GPT-4) | Per token |
 | `/api/balance` | GET | Account balance and rate limits | Free |
 | `/api/invoices` | GET | Invoice history and spend summary | Free |
 | `/api/health` | GET | Service health | Free |
 | `/.well-known/agent-manifest` | GET | AI agent discovery manifest | Free |
 
 Pricing model: prepaid balance (Stripe). Cached responses are free. Minimum top-up: $10.
+
+**Implementation:** The live API and agent manifest are served from the [Risk_Models](https://github.com/Cerebellum-Archive/Risk_Models) platform repo (Next.js, Supabase). Backend Supabase tables include `ticker_factor_metrics`, `erm3_ticker_returns`, `erm3_l3_decomposition`, `erm3_betas`, `erm3_rankings`, and billing/agent tables—see [AUTHENTICATION_GUIDE.md](AUTHENTICATION_GUIDE.md) for the full list and direct DB access. That repo also includes app-only routes (auth, Stripe, Plaid, admin, user API keys, etc.) not covered in this public API reference.
 
 ---
 
@@ -123,9 +127,49 @@ Pricing model: prepaid balance (Stripe). Cached responses are free. Minimum top-
 | [OPENAPI_SPEC.yaml](OPENAPI_SPEC.yaml) | Complete OpenAPI 3.0.3 contract with request/response schemas |
 | [SEMANTIC_ALIASES.md](SEMANTIC_ALIASES.md) | Field definitions, units, formulas, and dataset coverage |
 | [AUTHENTICATION_GUIDE.md](AUTHENTICATION_GUIDE.md) | Bearer token, Supabase JWT, AI agent provisioning flow |
+| [SUPABASE_TABLES.md](SUPABASE_TABLES.md) | Supabase table reference (metrics, erm3_*, erm3_betas, erm3_rankings, billing) |
 | [RESPONSE_METADATA.md](RESPONSE_METADATA.md) | `_agent` block schema, response headers, pricing table, cache behaviour |
 | [ERROR_SCHEMA.md](ERROR_SCHEMA.md) | All error codes, HTTP statuses, and recovery patterns |
 | [VALIDATION_HELPERS.md](VALIDATION_HELPERS.md) | Python + TypeScript data quality checks |
+| [MCP (Cursor / IDE)](#mcp) | API visibility in Cursor and other MCP clients: manifest, capabilities, schemas, tools |
+
+---
+
+## MCP
+
+A **RiskModels MCP server** in this repo exposes the API inside [Cursor](https://cursor.com) (and other [MCP](https://modelcontextprotocol.io) clients) so you can discover endpoints, read the agent manifest, list capabilities, and fetch response schemas without leaving the IDE.
+
+**Resources:** `riskmodels:///manifest`, `riskmodels:///capabilities`, `riskmodels:///schemas/list`, `riskmodels:///schemas/{path}`, `riskmodels:///openapi`  
+**Tools:** `riskmodels_list_endpoints`, `riskmodels_get_capability`, `riskmodels_get_schema`
+
+### Setup
+
+1. Clone **this repo** (RiskModels_API):
+   ```bash
+   git clone https://github.com/Cerebellum-Archive/RiskModels_API.git
+   cd RiskModels_API
+   ```
+2. Install and build the MCP server:
+   ```bash
+   cd mcp-server && npm install && npm run build
+   ```
+3. Add the server to Cursor: create or edit `.cursor/mcp.json` in your project. Use the **absolute path** to the built server, for example:
+   ```json
+   {
+     "mcpServers": {
+       "riskmodels-api": {
+         "command": "node",
+         "args": ["/path/to/RiskModels_API/mcp-server/dist/index.js"]
+       }
+     }
+   }
+   ```
+   If you open the RiskModels_API folder as your Cursor workspace, you can use a relative path: `"args": ["mcp-server/dist/index.js"]`.
+4. Restart Cursor. The **riskmodels-api** server will appear under MCP.
+
+**Optional:** Set `RISKMODELS_API_BASE=https://riskmodels.net` in your environment so the manifest resource fetches the live agent manifest from the API.
+
+Full details: [mcp-server/README.md](mcp-server/README.md).
 
 ---
 

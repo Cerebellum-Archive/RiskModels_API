@@ -112,13 +112,25 @@ supabase = create_client(
 response = supabase.table('ticker_factor_metrics').select('*').execute()
 ```
 
-```typescript
-// Server-side only
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!  // Server env var only
-);
-```
+---
+
+## Implementation — Supabase Tables (Risk_Models)
+
+The live platform ([Risk_Models](https://github.com/Cerebellum-Archive/Risk_Models)) uses Supabase for persistence. Tables relevant to the public API and agent features:
+
+| Table / view | Purpose |
+|--------------|---------|
+| `ticker_factor_metrics` | Latest risk metrics per ticker (HR/ER, vol, sector, etc.); RLS for paid access |
+| `ticker_factor_metrics_free` | View for free-tier access (subset of metrics) |
+| `ticker_metadata` | Ticker symbols, names, sector/ETF mappings |
+| `erm3_ticker_returns`, `erm3_l3_decomposition`, `erm3_time_index`, `erm3_etf_returns` | Time series and decomposition data (Zarr-backed or synced) |
+| `erm3_betas` | Factor betas per ticker/date (or per ticker latest); synced from ERM3/Zarr pipeline |
+| `erm3_rankings` | Ticker rankings (e.g. risk, factor exposure) for screening and API responses |
+| `agent_accounts`, `agent_api_keys` | Agent keys and provisioning |
+| `billing_events`, `agent_invoices`, `balance_top_ups`, `user_generated_api_keys` | Billing and prepaid balance |
+| `ticker_request_logs` | Request logging / analytics (internal) |
+
+Backend data is also served from Zarr on Google Cloud Storage (`gs://rm_api_data/`: returns, betas, hedge weights). Supabase tables `erm3_betas` and `erm3_rankings` are populated from the same pipeline or from Zarr for low-latency API and direct DB access. This reference repo documents the HTTP API only; for direct DB access use the table names above with Mode 2 or Mode 3 as appropriate.
 
 ---
 

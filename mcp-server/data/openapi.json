@@ -1,0 +1,83 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "RiskModels API",
+    "description": "Institutional-grade equity risk analysis and hedge ratio optimization. See agent manifest at /.well-known/agent-manifest.json",
+    "version": "2.0.0-agent"
+  },
+  "servers": [{ "url": "https://riskmodels.net", "description": "Production" }],
+  "paths": {
+    "/api/metrics/{ticker}": {
+      "get": {
+        "summary": "Latest risk metrics snapshot",
+        "description": "Returns the most recent risk metrics for the given ticker (HR/ER, vol, Sharpe, sector, market cap)",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Ticker symbol"
+          }
+        ]
+      }
+    },
+    "/api/ticker-returns": {
+      "get": {
+        "summary": "Get Ticker Returns",
+        "description": "Retrieve daily returns with L1/L2/L3 hedge ratios for any stock ticker",
+        "parameters": [
+          { "name": "ticker", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Stock ticker symbol" },
+          { "name": "years", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 15, "default": 1 } }
+        ]
+      }
+    },
+    "/api/l3-decomposition": {
+      "get": {
+        "summary": "L3 Risk Decomposition",
+        "description": "Decompose stock risk into market, sector, and idiosyncratic components",
+        "parameters": [
+          { "name": "ticker", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "date", "in": "query", "required": false, "schema": { "type": "string" }, "description": "YYYY-MM-DD or latest" }
+        ]
+      }
+    },
+    "/api/tickers": {
+      "get": {
+        "summary": "Ticker Search",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "mag7", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "include_metadata", "in": "query", "schema": { "type": "boolean" } }
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Health Status",
+        "description": "Real-time health status of all API services"
+      }
+    },
+    "/api/telemetry": {
+      "get": {
+        "summary": "Telemetry Metrics",
+        "parameters": [
+          { "name": "capability", "in": "query", "schema": { "type": "string" } },
+          { "name": "days", "in": "query", "schema": { "type": "integer", "default": 30 } }
+        ]
+      }
+    },
+    "/api/batch/analyze": {
+      "post": {
+        "summary": "Portfolio Batch Analysis",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object" } } } }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "summary": "AI Risk Analyst",
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object" } } } }
+      }
+    }
+  }
+}
