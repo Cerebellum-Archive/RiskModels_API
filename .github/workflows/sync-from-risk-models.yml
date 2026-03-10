@@ -1,0 +1,77 @@
+# Sync API_TERMS.md and OpenAPI spec from Risk_Models (source of truth)
+#
+# Required secret: REPO_ACCESS_TOKEN
+#   - Must have repo scope and read access to the source repo
+#   - Used to checkout source (required if that repo is private)
+#
+# Source repo: Cerebellum-Archive/Risk_Models
+#
+# Trigger: When API_TERMS.md or openapi.json change in the source repo,
+# the workflow at .github/workflows/trigger-api-sync.yml sends repository_dispatch
+# with event-type: sync_api_assets to run this workflow.
+#
+name: Sync from Risk Models
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [sync_api_assets]
+  schedule:
+    # Weekly on Sunday 00:00 UTC
+    - cron: "0 0 * * 0"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout RiskModels_API
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout Risk_Models
+        uses: actions/checkout@v4
+        with:
+          repository: Cerebellum-Archive/Risk_Models
+          path: risk-models
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+      - name: Copy API_TERMS.md
+        run: |
+          cp risk-models/riskmodels_com/docs/api/API_TERMS.md API_TERMS.md
+
+      - name: Copy OpenAPI spec (JSON)
+        run: |
+          cp risk-models/riskmodels_com/mcp-server/data/openapi.json OPENAPI_SPEC.json
+
+      - name: Convert JSON to YAML
+        run: |
+          pip install pyyaml
+          python3 -c "
+          import json, yaml
+          with open('OPENAPI_SPEC.json') as f:
+              j = json.load(f)
+          with open('OPENAPI_SPEC.yaml', 'w') as f:
+              yaml.dump(j, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+          "
+
+      - name: Update mcp-server openapi.json
+        run: |
+          cp OPENAPI_SPEC.json mcp-server/data/openapi.json
+
+      - name: Validate OpenAPI spec
+        run: |
+          npx @apidevtools/swagger-cli validate OPENAPI_SPEC.yaml
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: sync API_TERMS and OpenAPI spec from Risk_Models [skip ci]"
+          file_pattern: |
+            API_TERMS.md
+            OPENAPI_SPEC.json
+            OPENAPI_SPEC.yaml
+            mcp-server/data/openapi.json

@@ -57,7 +57,7 @@ info:
     email: api-support@riskmodels.net
     url: https://riskmodels.net
 
-  termsOfService: https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/API_TERMS.md
+  termsOfService: https://riskmodels.net/terms/api
   license:
     name: Commercial
     url: https://riskmodels.net/terms
@@ -429,22 +429,77 @@ components:
 
     MCPTool:
       type: object
+      description: >
+        MCP tool descriptor as returned by `tools/list`. Tools are discoverable via
+        `https://riskmodels.net/.well-known/mcp.json` or by connecting to the SSE
+        endpoint at `https://riskmodels.net/api/mcp/sse` and calling `tools/list`.
       properties:
         name:
           type: string
-          enum: 
+          enum:
             - riskmodels_list_endpoints
             - riskmodels_get_capability
             - riskmodels_get_schema
             - analyze_portfolio
             - hedge_portfolio
             - get_risk_decomposition
+          description: |
+            Available tools:
+            - `riskmodels_list_endpoints`: List all available API endpoints with summaries, tags, and costs. No required inputs.
+            - `riskmodels_get_capability`: Get detailed schema and documentation for a specific capability by ID (e.g. "ticker-returns", "metrics", "l3-decomposition"). Input: `{ id: string }`.
+            - `riskmodels_get_schema`: Fetch the JSON response schema for a given endpoint path. Input: `{ path: string }`.
+            - `analyze_portfolio`: Analyze a portfolio of ticker positions — returns per-ticker risk metrics (volatility, Sharpe, hedge ratios, explained risk) and portfolio-level aggregates. Input: `{ positions: Array<{ ticker: string, weight?: number }> }`.
+            - `hedge_portfolio`: Compute optimal hedge notionals for a portfolio using ERM3 factor model. Returns L1/L2/L3 hedge amounts in USD. Input: `{ positions: Array<{ ticker: string, notional_usd: number }>, level?: "l1"|"l2"|"l3" }`.
+            - `get_risk_decomposition`: Get monthly L3 factor risk decomposition time series for a ticker. Input: `{ ticker: string, from?: string, to?: string }`.
         description:
           type: string
         inputSchema:
           type: object
+          description: JSON Schema describing the tool's input parameters.
         outputSchema:
           type: object
+          description: JSON Schema describing the tool's output structure.
+
+    InsufficientBalance:
+      type: object
+      description: Returned when the account prepaid balance is exhausted (HTTP 402).
+      properties:
+        error:
+          type: string
+          enum: [INSUFFICIENT_BALANCE]
+          example: INSUFFICIENT_BALANCE
+        message:
+          type: string
+          example: "Insufficient balance. Current balance: $0.00. Top up at https://riskmodels.net/billing"
+        balance_usd:
+          type: number
+          format: float
+          example: 0.0
+        top_up_url:
+          type: string
+          format: uri
+          example: https://riskmodels.net/billing
+
+    RateLimitExceeded:
+      type: object
+      description: Returned when the per-minute rate limit is exceeded (HTTP 429).
+      properties:
+        error:
+          type: string
+          enum: [RATE_LIMIT_EXCEEDED]
+          example: RATE_LIMIT_EXCEEDED
+        message:
+          type: string
+          example: "Rate limit exceeded. Retry after 2026-03-08T12:34:56Z"
+        retry_after:
+          type: string
+          format: date-time
+          description: ISO timestamp after which the client may retry.
+          example: "2026-03-08T12:34:56Z"
+        limit:
+          type: integer
+          description: Requests allowed per minute for this key.
+          example: 60
 
 security:
   - BearerAuth: []
@@ -514,8 +569,13 @@ paths:
       description: >
         Server-Sent Events endpoint for Model Context Protocol communication.
         Establishes a persistent connection for real-time MCP protocol messages.
-        
-        
+
+
+        **Discovery:** The MCP server manifest is published at
+        `https://riskmodels.net/.well-known/mcp.json` for automated client discovery.
+        Clients should read that manifest to obtain the SSE URL, supported tools, and auth requirements.
+
+
         **Connection:**
 
         - Protocol: Server-Sent Events (SSE)
@@ -523,8 +583,8 @@ paths:
         - Authentication: Required (Bearer token)
 
         - Keep-alive: 30-second heartbeat
-        
-        
+
+
         **Usage:**
 
         ```javascript
@@ -1003,12 +1063,34 @@ paths:
                       $ref: "#/components/schemas/TickerReturnsRow"
                   _agent:
                     $ref: "#/components/schemas/AgentMeta"
+        "401":
+          description: Missing or invalid Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          description: Insufficient balance.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsufficientBalance"
         "404":
           description: Ticker not found.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded.
+          headers:
+            Retry-After:
+              schema: {type: integer}
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitExceeded"
 
   /l3-decomposition:
     get:
@@ -1116,6 +1198,33 @@ paths:
                     example: uni_mc_3000
                   _agent:
                     $ref: "#/components/schemas/AgentMeta"
+        "401":
+          description: Missing or invalid Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          description: Insufficient balance.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsufficientBalance"
+        "404":
+          description: Ticker not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded.
+          headers:
+            Retry-After:
+              schema: {type: integer}
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitExceeded"
 
   /batch/analyze:
     post:
@@ -1199,6 +1308,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          description: Insufficient balance.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsufficientBalance"
+        "429":
+          description: Rate limit exceeded.
+          headers:
+            Retry-After:
+              schema: {type: integer}
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitExceeded"
 
   /tickers:
     get:
@@ -1288,7 +1418,7 @@ paths:
                     format: date-time
                   version:
                     type: string
-                    example: 2.0.0-agent
+                    example: 3.0.0-agent
                   services:
                     type: object
                     additionalProperties:
@@ -1346,6 +1476,21 @@ paths:
                   last_updated:
                     type: string
                     format: date-time
+        "401":
+          description: Missing or invalid Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded.
+          headers:
+            Retry-After:
+              schema: {type: integer}
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitExceeded"
 
   /invoices:
     get:
@@ -1402,6 +1547,21 @@ paths:
                       current_period_cost_usd:
                         type: number
                         format: float
+        "401":
+          description: Missing or invalid Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded.
+          headers:
+            Retry-After:
+              schema: {type: integer}
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitExceeded"
 
   /auth/provision:
     post:
@@ -1429,6 +1589,12 @@ paths:
                   created_at:
                     type: string
                     format: date-time
+        "401":
+          description: Missing or invalid session JWT.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /telemetry:
     get:
@@ -1457,6 +1623,27 @@ paths:
       responses:
         "200":
           description: Telemetry metrics for the requested period.
+        "401":
+          description: Missing or invalid Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          description: Insufficient balance.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsufficientBalance"
+        "429":
+          description: Rate limit exceeded.
+          headers:
+            Retry-After:
+              schema: {type: integer}
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitExceeded"
 
   /chat:
     post:
@@ -1487,6 +1674,27 @@ paths:
       responses:
         "200":
           description: Assistant reply and optional tool calls.
+        "401":
+          description: Missing or invalid Bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "402":
+          description: Insufficient balance.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsufficientBalance"
+        "429":
+          description: Rate limit exceeded.
+          headers:
+            Retry-After:
+              schema: {type: integer}
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitExceeded"
 
 tags:
   - name: Risk Metrics

@@ -214,7 +214,7 @@ Pricing model: prepaid balance (Stripe). Cached responses are free. Minimum top-
 
 | Document | Description |
 |---|---|
-| [API_TERMS.md](API_TERMS.md) | **API Terms of Service** — legal terms for API use; separate terms may apply to non-API clients |
+| [API Terms of Service](https://riskmodels.net/terms/api) ([local copy](API_TERMS.md)) | **API Terms of Service** — legal terms for API use; separate terms may apply to non-API clients |
 | [OPENAPI_SPEC.yaml](OPENAPI_SPEC.yaml) | Complete OpenAPI 3.0.3 contract with request/response schemas |
 | [SEMANTIC_ALIASES.md](SEMANTIC_ALIASES.md) | Field definitions, units, formulas, and dataset coverage |
 | [AUTHENTICATION_GUIDE.md](AUTHENTICATION_GUIDE.md) | Bearer token, Supabase JWT, AI agent provisioning flow |
@@ -262,6 +262,35 @@ A **RiskModels MCP server** in this repo exposes the API inside [Cursor](https:/
 
 Full details: [mcp-server/README.md](mcp-server/README.md).
 
+### Remote MCP Connection (v3.0.0-agent)
+
+For AI agents connecting directly to the hosted MCP server (no local clone required):
+
+**Discovery manifest:** `https://riskmodels.net/.well-known/mcp.json`
+
+**SSE endpoint:** `https://riskmodels.net/api/mcp/sse`
+
+```bash
+# Authenticate, then connect
+curl -N https://riskmodels.net/api/mcp/sse \
+  -H "Authorization: Bearer rm_agent_live_..."
+```
+
+**Claude Desktop / Cursor (remote SSE config):**
+```json
+{
+  "mcpServers": {
+    "riskmodels": {
+      "url": "https://riskmodels.net/api/mcp/sse",
+      "transport": "sse",
+      "headers": { "Authorization": "Bearer rm_agent_live_..." }
+    }
+  }
+}
+```
+
+**Available remote MCP tools:** `riskmodels_list_endpoints`, `riskmodels_get_capability`, `riskmodels_get_schema`, `analyze_portfolio`, `hedge_portfolio`, `get_risk_decomposition`
+
 ---
 
 ## Examples
@@ -281,7 +310,7 @@ Full details: [mcp-server/README.md](mcp-server/README.md).
 
 ## Authentication
 
-By using the API, you agree to the [API Terms of Service](API_TERMS.md). All data endpoints require authentication via one of three methods:
+By using the API, you agree to the [API Terms of Service](https://riskmodels.net/terms/api). A copy is also available in [API_TERMS.md](API_TERMS.md). All data endpoints require authentication via one of three methods:
 
 ### Method 1: API Key (Direct Bearer Token)
 ```
