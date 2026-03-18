@@ -1482,15 +1482,15 @@ paths:
           description: Batch results keyed by ticker (JSON) or flattened tabular data (parquet/csv).
           content:
             application/x-parquet:
+              description: Parquet when format=parquet in request body. Columns ticker, date, gross_return, l1, l2, l3.
               schema:
                 type: string
                 format: binary
-              description: Parquet when format=parquet in request body. Columns: ticker, date, gross_return, l1, l2, l3.
             text/csv:
+              description: CSV when format=csv in request body.
               schema:
                 type: string
                 format: text
-              description: CSV when format=csv in request body.
             application/json:
               schema:
                 type: object

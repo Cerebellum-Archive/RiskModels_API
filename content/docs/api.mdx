@@ -1,0 +1,89 @@
+---
+title: API Documentation
+description: Complete reference for the RiskModels API
+---
+
+# RiskModels API Documentation
+
+This repository is the **authoritative public API reference** for the [RiskModels](https://riskmodels.net) equity risk model API.
+
+- **Live interactive docs:** [riskmodels.net/docs/api/erm3](https://riskmodels.net/docs/api/erm3)
+- **Computation engine:** [conradgann/ERM3](https://github.com/conradgann/ERM3) (Python, Huber/Ridge regression)
+- **Issues & feature requests:** [Open an issue](https://github.com/Cerebellum-Archive/RiskModels_API/issues)
+
+## Overview
+
+The RiskModels API provides institutional-grade equity risk analysis for AI agents and quantitative applications:
+
+- **Daily factor decompositions** — market, sector, and subsector explained-risk fractions for ~3,000 US equities
+- **Hedge ratios** — dollar-denominated ETF hedge amounts at three precision levels (L1 market-only, L2 market+sector, L3 full three-ETF)
+- **Historical time series** — daily returns and rolling hedge ratios going back to 2006
+- **AI-agent ready** — machine-readable manifest at `/.well-known/agent-manifest`, per-request billing via prepaid balance
+
+**Data coverage:** Universe `uni_mc_3000` (~3,000 top US stocks), date range 2006-01-04 to present, updated daily.
+
+## Core Endpoints
+
+| Endpoint | Method | Description | Cost |
+|---|---|---|---|
+| `/api/ticker-returns` | GET | Daily returns + rolling L1/L2/L3 hedge ratios, up to 15y | $0.005/call |
+| `/api/metrics/{ticker}` | GET | Latest snapshot: all 22 HR/ER fields, vol, Sharpe, sector, market cap | $0.005/call |
+| `/api/l3-decomposition` | GET | Monthly historical HR/ER time series | $0.005/call |
+| `/api/batch/analyze` | POST | Multi-ticker batch up to 100, 25% cheaper per position | $0.002/position |
+| `/api/tickers` | GET | Ticker universe search, MAG7 shortcut | Free |
+| `/api/balance` | GET | Account balance and rate limits | Free |
+| `/api/invoices` | GET | Invoice history and spend summary | Free |
+| `/api/health` | GET | Service health | Free |
+| `/.well-known/agent-manifest` | GET | AI agent discovery manifest | Free |
+
+Pricing model: prepaid balance (Stripe). Cached responses are free. Minimum top-up: $10.
+
+## Key Concepts
+
+### RR — Residual Risk
+
+**Definition:** Unexplained variance after hedging all three factors (market, sector, subsector).
+
+**Formula:** `RR = 1 - (l3_market_er + l3_sector_er + l3_subsector_er)`
+
+**Use cases:**
+- Screen for high RR (> 0.5) to identify alpha opportunities
+- Risk budgeting: allocate capital to stocks with sufficient idiosyncratic capacity
+- Portfolio construction: balance factor exposure vs. stock-specific risk
+
+### HR — Hedge Ratio
+
+**Definition:** Dollar amount of factor ETF to short per $1 of stock position.
+
+**Example:** `l3_market_hr = 1.28` means short $1.28 of SPY for every $1.00 long in the stock.
+
+**Use cases:**
+- Construct market-neutral or factor-neutral portfolios
+- Calculate hedge notionals: `hedge_notional = position_size_usd × hr_field`
+
+### ER — Explained Risk
+
+**Definition:** Fraction of stock variance explained by the factor regression (R-squared).
+
+**Hierarchy:**
+- **L1**: Market-only (SPY) — 1 hedge trade
+- **L2**: Market + GICS sector ETF — 2 hedge trades
+- **L3**: Market + sector + GICS subsector ETF — 3 hedge trades, maximum granularity
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [OPENAPI_SPEC.yaml](https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/OPENAPI_SPEC.yaml) | Complete OpenAPI 3.0.3 contract with request/response schemas |
+| [Authentication Guide](/docs/authentication) | Bearer token, OAuth2, Supabase JWT, AI agent provisioning flow |
+| [Methodology](/docs/methodology) | Hierarchical factor model math, hedge ratios, explained risk |
+| [SEMANTIC_ALIASES.md](https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/SEMANTIC_ALIASES.md) | Field definitions, units, formulas, and dataset coverage |
+| [RESPONSE_METADATA.md](https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/RESPONSE_METADATA.md) | `_agent` block schema, response headers, pricing table, cache behaviour |
+| [ERROR_SCHEMA.md](https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/ERROR_SCHEMA.md) | All error codes, HTTP statuses, and recovery patterns |
+
+## Support
+
+- **Issues & feature requests:** [github.com/Cerebellum-Archive/RiskModels_API/issues](https://github.com/Cerebellum-Archive/RiskModels_API/issues)
+- **API support email:** [api-support@riskmodels.net](mailto:api-support@riskmodels.net)
+- **Interactive docs:** [riskmodels.net/docs/api/erm3](https://riskmodels.net/docs/api/erm3)
+- **Status:** [riskmodels.net/status](https://riskmodels.net/status)
