@@ -7,16 +7,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { generateUserApiKey } from '@/lib/user-api-keys';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+import { getAppUrl } from '@/lib/app-url';
 const FREE_CREDIT_USD = 20;
 const DEFAULT_REFILL_THRESHOLD = 5.0;
 const DEFAULT_REFILL_AMOUNT = 50.0;
 
 export async function GET(req: NextRequest) {
   const sessionId = req.nextUrl.searchParams.get('session_id');
+  const appUrl = getAppUrl();
   if (!sessionId) {
-    return NextResponse.redirect(`${APP_URL}/get-key?stripe=error`);
+    return NextResponse.redirect(`${appUrl}/get-key?stripe=error`);
   }
 
   try {
@@ -25,12 +25,12 @@ export async function GET(req: NextRequest) {
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     if (session.status !== 'complete') {
-      return NextResponse.redirect(`${APP_URL}/get-key?stripe=incomplete`);
+      return NextResponse.redirect(`${appUrl}/get-key?stripe=incomplete`);
     }
 
     const userId = session.metadata?.user_id;
     if (!userId) {
-      return NextResponse.redirect(`${APP_URL}/get-key?stripe=error`);
+      return NextResponse.redirect(`${appUrl}/get-key?stripe=error`);
     }
 
     // Get the saved payment method from the SetupIntent
@@ -104,12 +104,12 @@ export async function GET(req: NextRequest) {
       });
 
       // Pass key prefix as a hint so the dashboard can show a reveal prompt
-      return NextResponse.redirect(`${APP_URL}/get-key?stripe=success&kp=${encodeURIComponent(prefix)}`);
+      return NextResponse.redirect(`${appUrl}/get-key?stripe=success&kp=${encodeURIComponent(prefix)}`);
     }
 
-    return NextResponse.redirect(`${APP_URL}/get-key?stripe=success`);
+    return NextResponse.redirect(`${appUrl}/get-key?stripe=success`);
   } catch (err) {
     console.error('[setup-success]', err);
-    return NextResponse.redirect(`${APP_URL}/get-key?stripe=error`);
+    return NextResponse.redirect(`${appUrl}/get-key?stripe=error`);
   }
 }

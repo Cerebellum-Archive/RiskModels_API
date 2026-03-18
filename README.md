@@ -51,6 +51,9 @@ This repo now includes a **Next.js developer portal** with:
 # Install dependencies
 npm install
 
+# Copy env template and fill in Supabase/Stripe keys
+cp .env.example .env.local
+
 # Generate OpenAPI JSON for Redoc
 npm run build:openapi
 
@@ -70,7 +73,7 @@ npm run build
 npm start
 ```
 
-**Deployment:** Connect this repo to Vercel and add the custom domain `riskmodels.app`.
+**Deployment:** See [DEPLOYMENT.md](DEPLOYMENT.md) for Vercel setup, env vars, and Supabase/Stripe config.
 
 ---
 

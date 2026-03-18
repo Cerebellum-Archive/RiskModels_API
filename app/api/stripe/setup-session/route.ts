@@ -8,8 +8,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+import { getAppUrl } from '@/lib/app-url';
 
 export async function POST() {
   try {
@@ -44,8 +43,8 @@ export async function POST() {
       customer: customerId,
       mode: 'setup',
       payment_method_types: ['card'],
-      success_url: `${APP_URL}/api/stripe/setup-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${APP_URL}/get-key?stripe=cancelled`,
+      success_url: `${getAppUrl()}/api/stripe/setup-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${getAppUrl()}/get-key?stripe=cancelled`,
       custom_text: {
         submit: { message: 'Your card is saved for billing. You will not be charged now.' },
       },
