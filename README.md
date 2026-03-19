@@ -1,3 +1,5 @@
+RiskModels provides factor decompositions and ETF-executable hedge ratios for ~3,000 US equities, with history dating back to 2006. The API is AI-agent ready, including a built-in Model Context Protocol (MCP) server for seamless integration with LLMs.
+
 # RiskModels API Developer Portal
 
 [![CI](https://github.com/Cerebellum-Archive/RiskModels_API/actions/workflows/ci.yml/badge.svg)](https://github.com/Cerebellum-Archive/RiskModels_API/actions/workflows/ci.yml)
@@ -32,6 +34,14 @@ The RiskModels API provides institutional-grade equity risk analysis:
 - **AI-agent ready** — OAuth2, per-request billing, machine-readable manifests
 
 **Data coverage:** Universe `uni_mc_3000` (~3,000 top US stocks), updated daily.
+
+---
+
+## 🤖 MCP Server
+
+RiskModels includes a first-class [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server, enabling AI agents to directly query risk data and perform factor analysis.
+
+See the [mcp-server/](./mcp-server/) directory for installation and usage instructions.
 
 ---
 
