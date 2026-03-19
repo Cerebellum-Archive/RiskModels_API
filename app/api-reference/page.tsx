@@ -93,7 +93,7 @@ export default function ApiReferencePage() {
   const [selectedId, setSelectedId] = useState<string>('getMetrics');
   const [search, setSearch] = useState('');
   const [estimateApiKey, setEstimateApiKey] = useState('');
-  const [estimateResponse, setEstimateResponse] = useState<unknown>(null);
+  const [estimateResponse, setEstimateResponse] = useState<Record<string, unknown> | null>(null);
   const [estimateLoading, setEstimateLoading] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
   const selected = getEndpointById(selectedId) ?? ENDPOINT_GROUPS[0]?.endpoints[0];
