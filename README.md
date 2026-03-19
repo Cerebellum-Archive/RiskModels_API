@@ -29,11 +29,25 @@ This repository is the **authoritative public API reference** for the [RiskModel
 The RiskModels API provides institutional-grade equity risk analysis:
 
 - **Daily factor decompositions** — market, sector, subsector explained-risk fractions for ~3,000 US equities
-- **Hedge ratios** — dollar-denominated ETF hedge amounts (L1/L2/L3)
-- **Historical time series** — daily returns and rolling hedge ratios (2006–present)
+- **Hedge ratios** — dollar-denominated ETF hedge amounts (L1/L2/L3) designed to remain executable with liquid raw ETFs
+- **Historical time series** — split- and dividend-adjusted returns plus rolling hedge ratios (2006–present)
 - **AI-agent ready** — OAuth2, per-request billing, machine-readable manifests
 
 **Data coverage:** Universe `uni_mc_3000` (~3,000 top US stocks), updated daily.
+
+---
+
+## Why The Engine Matters
+
+RiskModels is designed to be useful for real portfolio work, not just descriptive analytics:
+
+- **Built to be time-safe** — the engine is designed to avoid common sources of forward contamination such as recycled tickers, snapshot shares, and retroactive universe contraction
+- **Grounded in a real Security Master** — ticker-level outputs sit on top of a point-in-time identity layer built for identifier continuity, symbol changes, and historically defensible shares data
+- **Hierarchical by design** — the model separates market, sector, and subsector structure rather than collapsing everything into a flat beta view
+- **Tradeable in practice** — the published hedge ratios are designed to work with liquid ETFs at execution time, not only with synthetic or orthogonalized factors
+- **Built on adjusted return series** — split- and dividend-adjusted returns make the decomposition and hedge ratios more economically consistent over long horizons
+
+For a deeper explanation of the engine design choices behind these claims, see the methodology docs and API reference.
 
 ---
 
