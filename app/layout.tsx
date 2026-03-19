@@ -4,7 +4,6 @@ import 'katex/dist/katex.min.css';
 import '@/styles/globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ThemeByPath from '@/components/ThemeByPath';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -14,7 +13,7 @@ export const metadata: Metadata = {
     template: '%s | RiskModels API',
   },
   description: 'Institutional-grade equity risk analysis API. Daily factor decompositions, hedge ratios, and risk attribution for ~3,000 US equities. AI-agent ready with historical data back to 2006.',
-  keywords: ['API', 'risk models', 'equity risk', 'hedge ratios', 'factor analysis', 'quantitative finance', 'AI agents'],
+  keywords: ['API', 'risk models', 'equity risk', 'hedge ratios', 'factor analysis', 'quantitative finance', 'AI agents', 'MCP', 'model context protocol', 'OpenAPI', 'ETF hedge', 'factor decomposition', 'Barra alternative', 'quant finance API'],
   authors: [{ name: 'Blue Water Macro Corp' }],
   creator: 'Blue Water Macro Corp',
   publisher: 'Blue Water Macro Corp',
@@ -25,11 +24,18 @@ export const metadata: Metadata = {
     title: 'RiskModels API — Precision Equity Risk Intelligence',
     description: 'Institutional-grade equity risk analysis API for developers and AI agents',
     siteName: 'RiskModels API',
+    images: [{
+      url: 'https://riskmodels.app/og-image.png',
+      width: 1200,
+      height: 630,
+      alt: 'RiskModels API',
+    }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'RiskModels API',
     description: 'Institutional-grade equity risk analysis API',
+    images: ['https://riskmodels.app/og-image.png'],
   },
   robots: {
     index: true,
@@ -45,15 +51,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeByPath>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1 pt-16">
-              {children}
-            </main>
-            <Footer />
-          </div>
-        </ThemeByPath>
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-1 pt-16">
+            {children}
+          </main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
