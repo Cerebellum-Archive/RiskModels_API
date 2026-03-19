@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, ExternalLink } from 'lucide-react';
+import { Search, ExternalLink, Play } from 'lucide-react';
 import { AccordionItem } from '@/components/ui/Accordion';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
 import { Tabs } from '@/components/ui/Tabs';
@@ -70,13 +70,59 @@ function getResponseExample(endpoint: Endpoint): string {
       2
     );
   }
+  if (endpoint.operationId === 'estimateCost') {
+    return JSON.stringify(
+      {
+        estimated_cost_usd: 0.005,
+        estimated_rows: 1260,
+        capability: 'ticker-returns',
+        pricing_model: 'per_request',
+        unit_cost_usd: 0.005,
+        note: 'Actual cost may vary. Cached responses are free.',
+      },
+      null,
+      2
+    );
+  }
   return JSON.stringify({ status: 'success', message: 'Response varies by endpoint.' }, null, 2);
 }
+
+const ESTIMATE_REQUEST_BODY = { endpoint: 'ticker-returns', params: { ticker: 'AAPL', years: 5 } };
 
 export default function ApiReferencePage() {
   const [selectedId, setSelectedId] = useState<string>('getMetrics');
   const [search, setSearch] = useState('');
+  const [estimateApiKey, setEstimateApiKey] = useState('');
+  const [estimateResponse, setEstimateResponse] = useState<unknown>(null);
+  const [estimateLoading, setEstimateLoading] = useState(false);
+  const [estimateError, setEstimateError] = useState<string | null>(null);
   const selected = getEndpointById(selectedId) ?? ENDPOINT_GROUPS[0]?.endpoints[0];
+
+  async function handleRunEstimate() {
+    setEstimateLoading(true);
+    setEstimateError(null);
+    setEstimateResponse(null);
+    try {
+      const res = await fetch(`${BASE_URL}/estimate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(estimateApiKey.trim() && { Authorization: `Bearer ${estimateApiKey.trim()}` }),
+        },
+        body: JSON.stringify(ESTIMATE_REQUEST_BODY),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEstimateError(data.message ?? data.error ?? `HTTP ${res.status}`);
+      } else {
+        setEstimateResponse(data);
+      }
+    } catch (err) {
+      setEstimateError(err instanceof Error ? err.message : 'Request failed');
+    } finally {
+      setEstimateLoading(false);
+    }
+  }
 
   const filteredGroups = ENDPOINT_GROUPS.map((group) => ({
     ...group,
@@ -136,7 +182,7 @@ export default function ApiReferencePage() {
                           <Badge variant={methodVariant(ep.method)} className="shrink-0">
                             {ep.method.toUpperCase()}
                           </Badge>
-                          <span className="truncate font-mono text-xs">{ep.path}</span>
+                          <span className="truncate font-mono text-xs">{ep.sidebarLabel ?? ep.path}</span>
                         </button>
                       </li>
                     ))}
@@ -221,11 +267,52 @@ export default function ApiReferencePage() {
                   value: 'request',
                   label: 'Request',
                   content: (
-                    <CodeBlock
-                      code={getRequestExample(selected)}
-                      showCopy
-                      className="mt-2"
-                    />
+                    <div className="space-y-4 mt-2">
+                      <CodeBlock
+                        code={getRequestExample(selected)}
+                        showCopy
+                      />
+                      {selectedId === 'estimateCost' && (
+                        <div className="pt-4 border-t border-zinc-800 space-y-3">
+                          <h4 className="text-sm font-semibold text-zinc-200">Try it out</h4>
+                          <div>
+                            <label htmlFor="estimate-api-key" className="block text-xs text-zinc-500 mb-1">
+                              API Key (required)
+                            </label>
+                            <Input
+                              id="estimate-api-key"
+                              type="password"
+                              placeholder="rm_agent_live_..."
+                              value={estimateApiKey}
+                              onChange={(e) => setEstimateApiKey(e.target.value)}
+                              className="bg-zinc-900 font-mono text-sm"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRunEstimate}
+                            disabled={estimateLoading || !estimateApiKey.trim()}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+                          >
+                            <Play size={14} />
+                            {estimateLoading ? 'Running…' : 'Run Request'}
+                          </button>
+                          {estimateError && (
+                            <p className="text-sm text-red-400">{estimateError}</p>
+                          )}
+                          {estimateResponse && (
+                            <div className="mt-2">
+                              <p className="text-xs text-zinc-500 mb-1">Response</p>
+                              <CodeBlock
+                                code={JSON.stringify(estimateResponse, null, 2)}
+                                showCopy
+                                language="json"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   ),
                 },
                 {

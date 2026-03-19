@@ -17,6 +17,7 @@ export interface EndpointParam {
 export interface Endpoint {
   path: string;
   method: HttpMethod;
+  sidebarLabel?: string;
   summary: string;
   description: string;
   operationId: string;
@@ -280,6 +281,7 @@ export const ENDPOINT_GROUPS: EndpointGroup[] = [
       {
         path: '/estimate',
         method: 'post',
+        sidebarLabel: 'Cost Estimate',
         summary: 'Estimate request cost',
         description: 'Returns predicted cost before a request is made. Free to call, requires authentication.',
         operationId: 'estimateCost',
