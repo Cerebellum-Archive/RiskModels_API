@@ -1,4 +1,7 @@
-# BWMACRO — AI Agent Instructions
+# BWMACRO — Internal Repository Maintenance
+> **ROLE:** Maintainer / Operations Agent
+> **SCOPE:** Repository health, schema consistency, and cross-repo synchronization.
+> **DO NOT USE** this file for end-user research, graphing, or data analysis tasks.
 
 This repo is the **single source of truth for AI instructions** across three related repos. When editing schemas, OpenAPI specs, MCP data, or tracking docs, follow the cross-repo sync rules below.
 

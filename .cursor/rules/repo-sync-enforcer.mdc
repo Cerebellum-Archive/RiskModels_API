@@ -1,7 +1,7 @@
 ---
-description: Enforces cross-repo schema & consistency rules across BWMACRO, RiskModels_API, and Risk_Models
+description: INTERNAL ONLY. Enforces cross-repo schema consistency for maintainers. Not for external agents using the API.
 globs:
-  - "**/*.json"
+  - "**/mcp-server/data/schemas/*.json"
   - "**/OPENAPI_SPEC.yaml"
   - "**/schema-paths.json"
   - "**/CHANGELOG.md"

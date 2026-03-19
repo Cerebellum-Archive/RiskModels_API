@@ -7,15 +7,71 @@ description: Complete reference for the RiskModels API
 
 This repository is the **authoritative public API reference** for the RiskModels equity risk model API.
 
-**Documentation:**
-- **OpenAPI Spec:** [OPENAPI_SPEC.yaml](https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/OPENAPI_SPEC.yaml) — Complete OpenAPI 3.0.3 contract with request/response schemas
-- **API Reference:** [Interactive docs](/api-reference) — Live OpenAPI viewer
-- **Authentication Guide:** [Authentication](/docs/authentication) — Bearer token, OAuth2, Supabase JWT, AI agent provisioning flow
-- **Methodology:** [Methodology](/docs/methodology) — Hierarchical factor model math, hedge ratios, explained risk
-- **Field Definitions:** [SEMANTIC_ALIASES.md](https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/SEMANTIC_ALIASES.md) — Field definitions, units, formulas, and dataset coverage
-- **Response Metadata:** [RESPONSE_METADATA.md](https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/RESPONSE_METADATA.md) — `_agent` block schema, response headers, pricing table, cache behaviour
-- **Error Handling:** [ERROR_SCHEMA.md](https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/ERROR_SCHEMA.md) — All error codes, HTTP statuses, and recovery patterns
-- **Issues & feature requests:** [Open an issue](https://github.com/Cerebellum-Archive/RiskModels_API/issues)
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-8 not-prose">
+  <a href="https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/OPENAPI_SPEC.yaml" target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <div className="flex items-center gap-3">
+      <span className="text-xl">📄</span>
+      <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">OpenAPI Spec</span>
+    </div>
+    <p className="text-xs text-zinc-500 leading-relaxed">Complete OpenAPI 3.0.3 contract with request/response schemas and all endpoint definitions.</p>
+  </a>
+  <a href="/api-reference" className="group flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <div className="flex items-center gap-3">
+      <span className="text-xl">⚡</span>
+      <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">API Reference</span>
+    </div>
+    <p className="text-xs text-zinc-500 leading-relaxed">Live interactive OpenAPI viewer. Try requests directly in the browser.</p>
+  </a>
+  <a href="/docs/authentication" className="group flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <div className="flex items-center gap-3">
+      <span className="text-xl">🔐</span>
+      <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">Authentication</span>
+    </div>
+    <p className="text-xs text-zinc-500 leading-relaxed">Bearer tokens, OAuth2 client credentials, Supabase JWT, and AI agent provisioning flows.</p>
+  </a>
+  <a href="/docs/agent-integration" className="group flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <div className="flex items-center gap-3">
+      <span className="text-xl">🤖</span>
+      <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">Agent Integration</span>
+    </div>
+    <p className="text-xs text-zinc-500 leading-relaxed">Cursor Rules for AI prompt, MCP server setup, and quant research workflows.</p>
+  </a>
+  <a href="/docs/methodology" className="group flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <div className="flex items-center gap-3">
+      <span className="text-xl">📐</span>
+      <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">Methodology</span>
+    </div>
+    <p className="text-xs text-zinc-500 leading-relaxed">Hierarchical factor model math, hedge ratio derivations, and explained risk formulas.</p>
+  </a>
+  <a href="https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/SEMANTIC_ALIASES.md" target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <div className="flex items-center gap-3">
+      <span className="text-xl">🔖</span>
+      <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">Field Definitions</span>
+    </div>
+    <p className="text-xs text-zinc-500 leading-relaxed">Canonical field names, units, math definitions, and dataset coverage in SEMANTIC_ALIASES.md.</p>
+  </a>
+  <a href="https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/RESPONSE_METADATA.md" target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <div className="flex items-center gap-3">
+      <span className="text-xl">📦</span>
+      <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">Response Metadata</span>
+    </div>
+    <p className="text-xs text-zinc-500 leading-relaxed"><code className="text-zinc-400 bg-zinc-800 px-1 rounded text-[11px]">_agent</code> block schema, response headers, pricing table, and cache behaviour.</p>
+  </a>
+  <a href="https://github.com/Cerebellum-Archive/RiskModels_API/blob/main/ERROR_SCHEMA.md" target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <div className="flex items-center gap-3">
+      <span className="text-xl">🚨</span>
+      <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">Error Handling</span>
+    </div>
+    <p className="text-xs text-zinc-500 leading-relaxed">All error codes, HTTP statuses, and recommended recovery patterns.</p>
+  </a>
+  <a href="https://github.com/Cerebellum-Archive/RiskModels_API/issues" target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <div className="flex items-center gap-3">
+      <span className="text-xl">💬</span>
+      <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">Issues & Requests</span>
+    </div>
+    <p className="text-xs text-zinc-500 leading-relaxed">Report bugs, request features, or ask questions on GitHub.</p>
+  </a>
+</div>
 
 ## Overview
 
@@ -78,3 +134,22 @@ Pricing model: prepaid balance (Stripe). Cached responses are free. Minimum top-
 
 - **Issues & feature requests:** [github.com/Cerebellum-Archive/RiskModels_API/issues](https://github.com/Cerebellum-Archive/RiskModels_API/issues)
 - **Email:** [contact@riskmodels.net](mailto:contact@riskmodels.net)
+
+---
+
+## Related
+
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 not-prose">
+  <a href="/docs/authentication" className="group flex flex-col gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">🔐 Authentication</span>
+    <p className="text-xs text-zinc-500">Get an API key, configure OAuth2, and understand the prepaid billing model.</p>
+  </a>
+  <a href="/docs/methodology" className="group flex flex-col gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">📐 Methodology</span>
+    <p className="text-xs text-zinc-500">The math behind L1/L2/L3 hedge ratios, explained risk, and factor decompositions.</p>
+  </a>
+  <a href="/docs/agent-integration" className="group flex flex-col gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 hover:border-primary/50 hover:bg-zinc-900 transition-all">
+    <span className="font-semibold text-zinc-100 group-hover:text-primary transition-colors text-sm">🤖 Agent Integration</span>
+    <p className="text-xs text-zinc-500">Use RiskModels with Cursor, Claude Desktop, or Zed via the npm CLI or MCP server.</p>
+  </a>
+</div>
