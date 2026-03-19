@@ -46,11 +46,33 @@ Pricing model: prepaid balance (Stripe). Cached responses are free. Minimum top-
 
 ## Key Concepts
 
-| Term | Definition |
-|---|---|
-| **RR — Residual Risk** | Unexplained variance after hedging all three factors (market, sector, subsector).<br/><br/>**Formula:** `RR = 1 - (l3_market_er + l3_sector_er + l3_subsector_er)`<br/><br/>**Use cases:** Screen for high RR (> 0.5) to identify alpha opportunities; Risk budgeting; Portfolio construction to balance factor exposure vs. stock-specific risk |
-| **HR — Hedge Ratio** | Dollar amount of factor ETF to short per \$1 of stock position.<br/><br/>**Example:** `l3_market_hr = 1.28` means short \$1.28 of SPY for every \$1.00 long in the stock.<br/><br/>**Use cases:** Construct market-neutral or factor-neutral portfolios; Calculate hedge notionals: `hedge_notional = position_size_usd × hr_field` |
-| **ER — Explained Risk** | Fraction of stock variance explained by the factor regression (R-squared).<br/><br/>**Hierarchy:**<br/>• **L1**: Market-only (SPY) — 1 hedge trade<br/>• **L2**: Market + GICS sector ETF — 2 hedge trades<br/>• **L3**: Market + sector + GICS subsector ETF — 3 hedge trades, maximum granularity |
+<div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 my-8">
+  <div>
+    <h3 className="text-lg font-bold text-zinc-100 mb-2">RR — Residual Risk</h3>
+  </div>
+  <div>
+    <p className="text-zinc-400 mb-3">Unexplained variance after hedging all three factors (market, sector, subsector).</p>
+    <p className="text-zinc-400 mb-3"><strong>Formula:</strong> <code>RR = 1 - (l3_market_er + l3_sector_er + l3_subsector_er)</code></p>
+    <p className="text-zinc-400"><strong>Use cases:</strong> Screen for high RR (&gt; 0.5) to identify alpha opportunities • Risk budgeting • Portfolio construction</p>
+  </div>
+
+  <div className="border-t border-zinc-800 md:border-0 pt-6 md:pt-0">
+    <h3 className="text-lg font-bold text-zinc-100 mb-2">HR — Hedge Ratio</h3>
+  </div>
+  <div className="border-t border-zinc-800 md:border-0 pt-6 md:pt-0">
+    <p className="text-zinc-400 mb-3">Dollar amount of factor ETF to short per $1 of stock position.</p>
+    <p className="text-zinc-400 mb-3"><strong>Example:</strong> <code>l3_market_hr = 1.28</code> means short $1.28 of SPY for every $1.00 long in the stock.</p>
+    <p className="text-zinc-400"><strong>Use cases:</strong> Construct market-neutral portfolios • Calculate hedge notionals: <code>hedge_notional = position_size_usd × hr_field</code></p>
+  </div>
+
+  <div className="border-t border-zinc-800 md:border-0 pt-6 md:pt-0">
+    <h3 className="text-lg font-bold text-zinc-100 mb-2">ER — Explained Risk</h3>
+  </div>
+  <div className="border-t border-zinc-800 md:border-0 pt-6 md:pt-0">
+    <p className="text-zinc-400 mb-3">Fraction of stock variance explained by the factor regression (R-squared).</p>
+    <p className="text-zinc-400"><strong>Hierarchy:</strong> <strong>L1</strong>: Market-only (SPY) — 1 hedge trade • <strong>L2</strong>: Market + sector — 2 hedge trades • <strong>L3</strong>: Market + sector + subsector — 3 hedge trades, maximum granularity</p>
+  </div>
+</div>
 
 ## Support
 
