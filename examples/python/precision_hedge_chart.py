@@ -41,6 +41,9 @@ df = df.sort_values("date").reset_index(drop=True)
 # ── Compute cumulative compound returns (geometric) ────────────────────────────
 # Formula: cum[t] = (1 + cum[t-1]) * (1 + daily[t]) - 1
 # All series start at 0% on day 0.
+# NOTE: Use returns_gross (daily stock return). The l1/l2/l3 fields are hedge ratios,
+# not returns; l3_mkt_er/l3_sec_er/l3_sub_er are explained-risk fractions. Factor
+# return series (market, sector, subsector) require pre-computed data not in this API.
 def cumulative(series):
     cum = np.zeros(len(series))
     for i, r in enumerate(series):
@@ -50,31 +53,19 @@ def cumulative(series):
             cum[i] = (1 + cum[i - 1]) * (1 + r) - 1
     return cum * 100   # convert to %
 
-df["cum_stock"]     = cumulative(df["stock"])
-df["cum_market"]    = cumulative(df["l1"])
-df["cum_sector"]    = cumulative(df["l2"])
-df["cum_subsector"] = cumulative(df["l3"])
+# Stock: use returns_gross (API may alias as "stock")
+stock_returns = df["returns_gross"] if "returns_gross" in df.columns else df["stock"]
+df["cum_stock"] = cumulative(stock_returns.fillna(0))
+
+# Factor layers: API does not return daily factor returns. Chart stock only.
+# TODO: Add market/sector/subsector lines when API exposes factor return series.
 
 # ── Plot ───────────────────────────────────────────────────────────────────────
 fig, ax = plt.subplots(figsize=(12, 5))
 fig.patch.set_facecolor("#0d0d0d")
 ax.set_facecolor("#0d0d0d")
 
-colors = {
-    "cum_stock":     "#60a5fa",   # blue  — stock
-    "cum_market":    "#6366f1",   # indigo — market (SPY)
-    "cum_sector":    "#34d399",   # green — sector ETF
-    "cum_subsector": "#9ca3af",   # grey  — subsector ETF
-}
-labels = {
-    "cum_stock":     TICKER,
-    "cum_market":    "Market (L1)",
-    "cum_sector":    "Sector (L2)",
-    "cum_subsector": "Subsector (L3)",
-}
-
-for col, color in colors.items():
-    ax.plot(df["date"], df[col], color=color, linewidth=1.4, label=labels[col])
+ax.plot(df["date"], df["cum_stock"], color="#60a5fa", linewidth=1.4, label=TICKER)
 
 ax.axhline(0, color="#444", linewidth=0.8, linestyle="--")
 ax.yaxis.set_major_formatter(mtick.PercentFormatter(decimals=0))
@@ -101,7 +92,3 @@ print(f"Chart saved to {TICKER}_hedge_chart.png")
 latest = df.iloc[-1]
 print(f"\nCumulative returns over {YEARS}y — as of {latest.date.date()}")
 print(f"  {TICKER} total return:    {latest.cum_stock:.1f}%")
-print(f"  Market factor return:    {latest.cum_market:.1f}%")
-print(f"  Sector factor return:    {latest.cum_sector:.1f}%")
-print(f"  Subsector factor return: {latest.cum_subsector:.1f}%")
-print(f"  Residual (unhedgeable):  {latest.cum_stock - latest.cum_subsector:.1f}%")
