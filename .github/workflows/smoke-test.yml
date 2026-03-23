@@ -29,13 +29,12 @@ jobs:
 
       - name: OpenAPI spec accessible
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://riskmodels.app/api/mcp/openapi)
-          # 200 (public) or 401 (auth-gated) are both fine — anything else is broken
-          if [ "$STATUS" != "200" ] && [ "$STATUS" != "401" ]; then
-            echo "❌ /api/mcp/openapi returned $STATUS"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://riskmodels.app/openapi.json)
+          if [ "$STATUS" != "200" ]; then
+            echo "❌ /openapi.json returned $STATUS"
             exit 1
           fi
-          echo "✅ /api/mcp/openapi → $STATUS"
+          echo "✅ /openapi.json → $STATUS"
 
       - name: Unauthenticated endpoints return 401
         run: |
