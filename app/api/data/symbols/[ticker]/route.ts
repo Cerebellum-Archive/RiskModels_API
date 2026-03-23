@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyGatewayAuth } from "@/lib/gateway-auth";
+import { resolveTickerAlias } from "@/lib/ticker-aliases";
 
 export const dynamic = "force-dynamic";
 
@@ -23,22 +24,20 @@ export async function GET(
   }
 
   const supabase = createAdminClient();
-  const upper = ticker.toUpperCase();
+  // Apply ticker alias resolution (e.g., GOOGL → GOOG)
+  const canonicalTicker = resolveTickerAlias(ticker);
 
   const { data, error } = await supabase
     .from("symbols")
     .select(
       "symbol, ticker, name, asset_type, sector_etf, subsector_etf, is_adr, isin, metadata, latest_metrics, latest_vol, latest_teo",
     )
-    .eq("ticker", upper)
+    .eq("ticker", canonicalTicker)
     .maybeSingle();
 
   if (error) {
     console.error(`[data/symbols] Error resolving ${upper}:`, error);
-    return NextResponse.json(
-      { error: "Internal error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 
   if (!data) {

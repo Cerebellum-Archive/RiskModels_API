@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyGatewayAuth } from "@/lib/gateway-auth";
+import { TICKER_ALIASES } from "@/lib/ticker-aliases";
 
 export const dynamic = "force-dynamic";
 
@@ -26,10 +27,20 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("symbols")
-    .select("symbol, ticker, name, asset_type, sector_etf, subsector_etf, is_adr, isin, metadata, latest_metrics, latest_vol, latest_teo");
+    .select(
+      "symbol, ticker, name, asset_type, sector_etf, subsector_etf, is_adr, isin, metadata, latest_metrics, latest_vol, latest_teo",
+    );
 
   if (q) {
-    query = query.or(`ticker.ilike.%${q}%,name.ilike.%${q}%`);
+    const upperQ = q.toUpperCase();
+    // Check if query matches an alias (e.g., GOOGL → GOOG)
+    const canonicalTicker = TICKER_ALIASES[upperQ];
+    if (canonicalTicker) {
+      // Search for the canonical ticker instead
+      query = query.or(`ticker.ilike.%${canonicalTicker}%,name.ilike.%${q}%`);
+    } else {
+      query = query.or(`ticker.ilike.%${q}%,name.ilike.%${q}%`);
+    }
   }
 
   if (assetType) {
