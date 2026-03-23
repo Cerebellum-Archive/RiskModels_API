@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyGatewayAuth } from "@/lib/gateway-auth";
+import { resolveTickerAliases } from "@/lib/ticker-aliases";
 
 export const dynamic = "force-dynamic";
 
@@ -39,14 +40,15 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  const upperTickers = tickers.map((t) => t.toUpperCase());
+  // Apply ticker alias resolution (e.g., GOOGL → GOOG)
+  const canonicalTickers = resolveTickerAliases(tickers);
 
   const { data, error } = await supabase
     .from("symbols")
     .select(
       "symbol, ticker, name, asset_type, sector_etf, subsector_etf, is_adr, isin, metadata, latest_metrics, latest_vol, latest_teo",
     )
-    .in("ticker", upperTickers);
+    .in("ticker", canonicalTickers);
 
   if (error) {
     console.error("[data/symbols/batch] Error:", error);
