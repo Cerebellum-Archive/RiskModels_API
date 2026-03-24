@@ -3,16 +3,33 @@
 import Link from 'next/link';
 import Logo from './Logo';
 import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      setUser(u);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const navLinks = [
     { href: '/docs/api', label: 'Docs' },
     { href: '/api-reference', label: 'Reference' },
     { href: '/quickstart', label: 'Quickstart' },
     { href: '/pricing', label: 'Pricing' },
+    { href: '/account/usage', label: 'Usage' },
   ];
 
   return (
@@ -38,11 +55,19 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+            {!user && (
+              <Link
+                href="/get-key"
+                className="text-sm font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
+              >
+                Sign in
+              </Link>
+            )}
             <Link
               href="/get-key"
               className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors"
             >
-              Get API Key
+              {user ? 'Dashboard' : 'Get API Key'}
             </Link>
           </div>
 
@@ -71,13 +96,22 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <div className="pt-3 border-t border-zinc-800">
+            <div className="pt-3 border-t border-zinc-800 space-y-2">
+              {!user && (
+                <Link
+                  href="/get-key"
+                  className="block text-center text-sm font-medium text-zinc-400 hover:text-zinc-200 py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Sign in
+                </Link>
+              )}
               <Link
                 href="/get-key"
                 className="block px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg text-center transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Get API Key
+                {user ? 'Dashboard' : 'Get API Key'}
               </Link>
             </div>
           </div>
