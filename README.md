@@ -89,8 +89,12 @@ This repo now includes a **Next.js developer portal** with:
 # Install dependencies
 npm install
 
-# Copy env template and fill in Supabase/Stripe keys
+# Option A: Copy env template and fill in Supabase/Stripe keys manually
 cp .env.example .env.local
+
+# Option B: Use Doppler (recommended for team consistency)
+# Ensure `doppler login` is done, then:
+doppler secrets download --no-file --format env > .env.local
 
 # Generate OpenAPI JSON for Redoc
 npm run build:openapi
@@ -98,6 +102,43 @@ npm run build:openapi
 # Run dev server
 npm run dev
 ```
+
+**Environment Management with Doppler:**
+
+This repo uses [Doppler](https://doppler.com) for secrets management. The `doppler.yaml` is pre-configured for the `erm3` project:
+
+```bash
+# Verify setup (should show project: erm3, config: dev)
+doppler setup
+
+# List all secrets
+doppler secrets
+
+# Get a specific secret
+doppler secrets get STRIPE_SECRET_KEY
+
+# Export dev secrets to .env.local for curl testing and local dev
+npm run doppler:env
+
+# Push production secrets to Vercel (requires vercel login + project link)
+npm run vercel:sync-env:doppler
+```
+
+**For curl/API testing with Doppler secrets:**
+
+```bash
+# 1. Export secrets to .env.local
+npm run doppler:env
+
+# 2. Source them for your shell session
+source .env.local
+
+# 3. Use in curl commands
+curl -H "Authorization: Bearer $RISKMODELS_API_SERVICE_KEY" \
+  https://riskmodels.app/api/health
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed Vercel/Doppler integration.
 
 Visit [http://localhost:3000](http://localhost:3000)
 
