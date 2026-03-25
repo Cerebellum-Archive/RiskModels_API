@@ -1,0 +1,41 @@
+{
+  "name": "riskmodels-cli",
+  "version": "1.0.1",
+  "description": "RiskModels CLI — SQL query, schema, balance, and agent manifests",
+  "type": "module",
+  "bin": {
+    "riskmodels": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "install:global": "npm run build && npm link"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "riskmodels",
+    "cli",
+    "sql",
+    "hedge",
+    "risk"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "inquirer": "^9.3.7",
+    "ora": "^8.1.1"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.0"
+  }
+}
