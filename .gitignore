@@ -9,6 +9,10 @@ out/
 build/
 dist/
 
+# Python venvs (e.g. packages/riskmodels/.venv)
+.venv/
+venv/
+
 # Dependencies
 node_modules/
 .pnp
@@ -22,6 +26,9 @@ coverage/
 *.log
 *.tsbuildinfo
 next-env.d.ts
+
+# Internal maintainer docs (not for public repo)
+AGENTS_INTERNAL.md
 
 # OS
 .DS_Store
