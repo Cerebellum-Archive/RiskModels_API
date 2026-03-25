@@ -15,7 +15,7 @@ export function schemaCommand(): Command {
     .description("Inspect PostgREST schema (direct / Supabase mode only)")
     .option("-t, --table <name>", "Show a single table definition")
     .action(async (opts: { table?: string }, cmd: Command) => {
-      const json = cmd.optsWithGlobals<{ json?: boolean }>().json ?? false;
+      const json = (cmd.optsWithGlobals() as { json?: boolean }).json ?? false;
       const cfg = await loadConfig();
 
       if (!isDirectReady(cfg)) {

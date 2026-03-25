@@ -12,7 +12,7 @@ export function balanceCommand(): Command {
   return new Command("balance")
     .description("Show account balance (billed mode)")
     .action(async (_opts, cmd: Command) => {
-      const json = cmd.optsWithGlobals<{ json?: boolean }>().json ?? false;
+      const json = (cmd.optsWithGlobals() as { json?: boolean }).json ?? false;
       const cfg = await loadConfig();
 
       if (!isBilledReady(cfg)) {

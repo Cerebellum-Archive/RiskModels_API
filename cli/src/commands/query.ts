@@ -66,7 +66,7 @@ export function queryCommand(): Command {
     .argument("<sql>", "SELECT statement")
     .option("-l, --limit <n>", "Max rows when query has no LIMIT", "100")
     .action(async (sqlArg: string, opts: { limit?: string }, cmd: Command) => {
-      const json = cmd.optsWithGlobals<{ json?: boolean }>().json ?? false;
+      const json = (cmd.optsWithGlobals() as { json?: boolean }).json ?? false;
       const limit = parseInt(String(opts.limit ?? "100"), 10) || 100;
       const cfg = await loadConfig();
 

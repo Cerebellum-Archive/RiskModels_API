@@ -117,7 +117,7 @@ export function configCommand(): Command {
     .description("Show current configuration (secrets masked)")
     .option("--json", "JSON output")
     .action(async (opts: { json?: boolean }, cmd: Command) => {
-      const json = opts.json || cmd.optsWithGlobals<{ json?: boolean }>().json;
+      const json = opts.json || (cmd.optsWithGlobals() as { json?: boolean }).json;
       const cfg = await loadConfig();
       if (!cfg) {
         const empty = { mode: null, message: "No config file yet. Run: riskmodels config init" };
