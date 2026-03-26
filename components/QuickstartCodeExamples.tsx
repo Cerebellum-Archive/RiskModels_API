@@ -442,14 +442,32 @@ export default function QuickstartCodeExamples() {
     <section id="code-examples" className="scroll-mt-24">
       <div className="flex items-start gap-4 mb-8">
         <div className="flex-shrink-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-          4
+          5
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="text-2xl font-bold text-zinc-100 mb-2">
             Longer examples
           </h2>
           <p className="text-zinc-400 mb-6">
-            Same four themes as{' '}
+            The repo&apos;s{' '}
+            <a
+              href="https://github.com/Cerebellum-Archive/RiskModels_API/tree/main/examples/python"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              examples/python
+            </a>{' '}
+            scripts mirror raw REST; for shorter, agent-friendly code prefer{' '}
+            <a
+              href="https://github.com/Cerebellum-Archive/RiskModels_API/tree/main/packages/riskmodels"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              riskmodels-py
+            </a>
+            . Same four themes as{' '}
             <Link
               href="/#what-you-can-do"
               className="font-semibold text-zinc-300 underline-offset-2 hover:text-primary hover:underline"

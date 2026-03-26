@@ -36,7 +36,8 @@ def validate_l3_er_sum(
         )
         return False, None, issue
     total = sum(float(v) for v in values)  # type: ignore[arg-type]
-    ok = abs(total - 1.0) <= tolerance
+    # Small epsilon so IEEE754 sums on the tolerance boundary (e.g. 0.95 vs 1.0) still pass.
+    ok = abs(total - 1.0) <= tolerance + 1e-12
     if ok:
         return True, total, None
     issue = RiskModelsValidationIssue(

@@ -401,7 +401,8 @@
           "returns_gross": {
             "type": "number",
             "format": "float",
-            "description": "Daily gross return of the stock."
+            "nullable": true,
+            "description": "Daily gross return of the stock. Null when rolling-window metrics are unavailable (trailing data)."
           },
           "price_close": {
             "type": "number",

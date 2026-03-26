@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import Logo from './Logo';
 import PortalSearch from './PortalSearch';
-import LiveDemoNav from './LiveDemoNav';
 import { Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -75,7 +74,6 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-2 lg:gap-3 flex-shrink-0 ml-auto">
-            <LiveDemoNav />
             {!user && (
               <Link
                 href="/get-key"
@@ -106,9 +104,6 @@ export default function Navbar() {
         <div className="md:hidden bg-zinc-900/95 border-t border-zinc-800 backdrop-blur-md">
           <div className="px-4 py-3 space-y-4 max-h-[min(85vh,32rem)] overflow-y-auto">
             <PortalSearch />
-            <div className="flex flex-wrap gap-2">
-              <LiveDemoNav />
-            </div>
             <div className="space-y-1 pt-1">
               {navLinks.map((link) => {
                 const active = navActive(pathname, link.href);

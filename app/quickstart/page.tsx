@@ -2,22 +2,54 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import CodeBlock from '@/components/CodeBlock';
 import QuickstartCodeExamples from '@/components/QuickstartCodeExamples';
+import QuickstartDemoKey from '@/components/QuickstartDemoKey';
 import { ArrowRight } from 'lucide-react';
 
-const pythonSdkExample = `from riskmodels import RiskModelsClient, to_llm_context
+const pythonSdkSingleTicker = `from riskmodels import RiskModelsClient
 
-# Auto-discover from environment (RISKMODELS_API_KEY)
+client = RiskModelsClient.from_env()  # RISKMODELS_API_KEY from environment
+
+# as_dataframe=True attaches metadata (ERM3 legend, semantic cheatsheet)
+df = client.get_metrics("NVDA", as_dataframe=True)
+
+print(f"Market Hedge Ratio: {df['l3_market_hr'].iloc[0]:.2f}")
+print(f"Residual Risk (Idiosyncratic): {df['l3_residual_er'].iloc[0]:.1%}")`;
+
+const pythonSdkPortfolio = `from riskmodels import RiskModelsClient
+
 client = RiskModelsClient.from_env()
 
-# Analyze portfolio with semantic fields and ticker normalization
-pa = client.analyze({"NVDA": 0.4, "GOOGL": 0.6})  # GOOGL→GOOG aliased
+portfolio = {
+    "AAPL": 0.4,
+    "MSFT": 0.3,
+    "NVDA": 0.2,
+    "GOOGL": 0.1,
+}
 
-# Holdings-weighted hedge ratios (pre-aggregated client-side)
-hr = pa.portfolio_hedge_ratios
-print(f"Market HR:  {hr['l3_market_hr']:.2f}")
-print(f"Sector HR:  {hr['l3_sector_hr']:.2f}")
+# analyze is an alias for analyze_portfolio; GOOGL may resolve to GOOG
+pa = client.analyze(portfolio)
 
-# LLM-ready context: includes lineage, legend, semantic cheatsheet
+print("Portfolio-Level L3 Hedge Ratios:")
+for key, val in pa.portfolio_hedge_ratios.items():
+    v = f"{val:.4f}" if val is not None else "n/a"
+    print(f"{key}: {v}")`;
+
+const pythonSdkDataset = `from riskmodels import RiskModelsClient
+
+# pip install riskmodels-py[xarray] — builds Ticker × Date × Metric cube
+client = RiskModelsClient.from_env()
+
+ds = client.get_dataset(["AAPL", "TSLA", "META"], years=2)
+
+meta_sector_hr = ds.sel(ticker="META")["l3_sector_hr"]
+meta_sector_hr.plot()`;
+
+const pythonSdkLlmContext = `from riskmodels import RiskModelsClient, to_llm_context
+
+client = RiskModelsClient.from_env()
+pa = client.analyze({"NVDA": 0.5, "AMD": 0.5})
+
+# Markdown tables, lineage, ERM3 legend — ready for LLM prompts
 print(to_llm_context(pa))`;
 
 const pythonRawExample = `import requests
@@ -104,6 +136,7 @@ export default function QuickstartPage() {
               <p className="text-zinc-400 mb-4">
                 Sign up and generate your API key — takes under a minute. No password needed.
               </p>
+              <QuickstartDemoKey />
               <Link
                 href="/get-key"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors"
@@ -169,16 +202,117 @@ export default function QuickstartPage() {
                 Analyze portfolios or fetch risk metrics for any ticker (e.g., NVDA, AAPL, MSFT). The SDK auto-normalizes ticker aliases and wire field names.
               </p>
 
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
                   <h3 className="text-sm font-semibold text-zinc-300 mb-3">Python SDK (Recommended)</h3>
-                  <CodeBlock
-                    code={pythonSdkExample}
-                    language="python"
-                    filename="quickstart_sdk.py"
-                  />
-                  <p className="mt-3 text-xs text-zinc-500 leading-relaxed">
-                    The SDK emits <code className="text-zinc-400 bg-zinc-800 px-1 rounded">ValidationWarning</code> for ticker aliases (GOOGL→GOOG) and returns semantic column names (<code className="text-zinc-400 bg-zinc-800 px-1 rounded">l3_market_hr</code> instead of raw <code className="text-zinc-400 bg-zinc-800 px-1 rounded">l3_mkt_hr</code>). See <Link href="/docs/api" className="text-blue-400 hover:text-blue-300 underline">Agent-Native Helpers</Link> for all SDK features.
+                  <p className="text-sm text-zinc-400 mb-4">
+                    Four common patterns — each uses{' '}
+                    <code className="text-zinc-300 bg-zinc-800 px-1 rounded">riskmodels-py</code> instead of hand-rolling REST,
+                    ticker cleanup, and field renaming.
+                  </p>
+
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+                        1 — Hedge a single stock (alias resolution)
+                      </h4>
+                      <CodeBlock
+                        code={pythonSdkSingleTicker}
+                        language="python"
+                        filename="sdk_single_ticker.py"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+                        2 — Analyze a weighted portfolio
+                      </h4>
+                      <CodeBlock
+                        code={pythonSdkPortfolio}
+                        language="python"
+                        filename="sdk_portfolio.py"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+                        3 — Build a multi-dimensional factor cube
+                      </h4>
+                      <CodeBlock
+                        code={pythonSdkDataset}
+                        language="python"
+                        filename="sdk_dataset.py"
+                      />
+                      <p className="mt-2 text-xs text-zinc-500">
+                        Requires the{' '}
+                        <code className="text-zinc-400 bg-zinc-800 px-1 rounded">[xarray]</code> extra (see Install the SDK).
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+                        4 — Generate LLM-ready context
+                      </h4>
+                      <CodeBlock
+                        code={pythonSdkLlmContext}
+                        language="python"
+                        filename="sdk_llm_context.py"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-8 overflow-x-auto rounded-lg border border-zinc-800">
+                    <table className="w-full min-w-[28rem] text-sm text-left">
+                      <thead>
+                        <tr className="border-b border-zinc-800 bg-zinc-900/80">
+                          <th className="py-3 px-4 font-semibold text-zinc-300">Feature</th>
+                          <th className="py-3 px-4 font-semibold text-zinc-400">Raw requests (example scripts)</th>
+                          <th className="py-3 px-4 font-semibold text-primary">RiskModels SDK</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-zinc-400">
+                        <tr className="border-b border-zinc-800/80">
+                          <td className="py-3 px-4 text-zinc-300">Ticker cleanup</td>
+                          <td className="py-3 px-4">Manual ticker.upper()</td>
+                          <td className="py-3 px-4">Automatic (e.g. GOOGL → GOOG)</td>
+                        </tr>
+                        <tr className="border-b border-zinc-800/80">
+                          <td className="py-3 px-4 text-zinc-300">Field names</td>
+                          <td className="py-3 px-4">Wire keys (l3_res_er, l3_mkt_hr)</td>
+                          <td className="py-3 px-4">Semantic names (l3_residual_er, l3_market_hr)</td>
+                        </tr>
+                        <tr className="border-b border-zinc-800/80">
+                          <td className="py-3 px-4 text-zinc-300">Validation</td>
+                          <td className="py-3 px-4">None</td>
+                          <td className="py-3 px-4">Warns on ER sum / HR sign issues (configurable)</td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-4 text-zinc-300">Context for agents</td>
+                          <td className="py-3 px-4">Raw JSON</td>
+                          <td className="py-3 px-4">Markdown tables + ERM3 legend via to_llm_context</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <p className="mt-6 text-sm text-zinc-400">
+                    <strong className="text-zinc-300">Production auth:</strong> set{' '}
+                    <code className="text-zinc-300 bg-zinc-800 px-1 rounded">RISKMODELS_CLIENT_ID</code> and{' '}
+                    <code className="text-zinc-300 bg-zinc-800 px-1 rounded">RISKMODELS_CLIENT_SECRET</code>, then{' '}
+                    <code className="text-zinc-300 bg-zinc-800 px-1 rounded">RiskModelsClient.from_env()</code> — the SDK
+                    refreshes OAuth2 client-credentials tokens. Full flow:{' '}
+                    <Link href="/docs/authentication" className="text-primary hover:underline">
+                      Authentication guide
+                    </Link>
+                    .
+                  </p>
+
+                  <p className="mt-4 text-xs text-zinc-500 leading-relaxed">
+                    The SDK emits <code className="text-zinc-400 bg-zinc-800 px-1 rounded">ValidationWarning</code> for
+                    ticker aliases (GOOGL→GOOG) and returns semantic column names (
+                    <code className="text-zinc-400 bg-zinc-800 px-1 rounded">l3_market_hr</code> instead of raw{' '}
+                    <code className="text-zinc-400 bg-zinc-800 px-1 rounded">l3_mkt_hr</code>). See{' '}
+                    <Link href="/docs/api" className="text-blue-400 hover:text-blue-300 underline">
+                      Agent-Native Helpers
+                    </Link>{' '}
+                    for all SDK features.
                   </p>
                 </div>
 
@@ -296,7 +430,7 @@ export default function QuickstartPage() {
         <div className="mb-12">
           <div className="flex items-start gap-4 mb-6">
             <div className="flex-shrink-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-              5
+              6
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-zinc-100 mb-3">Explore more</h2>
