@@ -311,7 +311,7 @@ In the `faqs` array (line ~91-93), replace the volume discount answer:
 ```typescript
 {
   q: "Is there a volume discount?",
-  a: "If your monthly API spend consistently exceeds $100, email contact@riskmodels.net — we can sharpen pricing for steady usage, raise rate limits (100+ req/min), and help you get integrated. We keep it straightforward.",
+  a: "If your monthly API spend consistently exceeds $100, email service@riskmodels.app — we can sharpen pricing for steady usage, raise rate limits (100+ req/min), and help you get integrated. We keep it straightforward.",
 },
 ```
 

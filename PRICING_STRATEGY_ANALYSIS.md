@@ -127,7 +127,7 @@ Similarly, consider whether `factor-correlation` should scale with `window_days`
 
 ### 2.5 Build a Self-Serve Enterprise Dashboard (Priority: Medium, Effort: High)
 
-**Why it matters:** "Email us" is a conversion killer. Stripe's growth was built on self-serve pricing pages where you could see exactly what you'd pay at any scale. The current enterprise section asks users to email `contact@riskmodels.net` — this adds friction, delays, and loses the developer-first ethos. Every competitor from Polygon to Quandl has moved toward self-serve enterprise sign-up.
+**Why it matters:** "Email us" is a conversion killer. Stripe's growth was built on self-serve pricing pages where you could see exactly what you'd pay at any scale. The current enterprise section asks users to email `service@riskmodels.app` — this adds friction, delays, and loses the developer-first ethos. Every competitor from Polygon to Quandl has moved toward self-serve enterprise sign-up.
 
 **How to implement:**
 
@@ -375,7 +375,7 @@ Replace the token-based estimator with an endpoint-aware calculator:
 **Current FAQ Q:** "Is there a volume discount?"
 **Current answer:** References "10M+ tokens/month" — should reference request volume or dollar spend instead.
 
-**Suggested rewrite:** "If your monthly API spend consistently exceeds $100, our Growth and Pro tiers offer 10-15% bonus credits and higher rate limits. For spend above $2,000/month, we negotiate custom pricing. Email contact@riskmodels.net or upgrade directly from your dashboard."
+**Suggested rewrite:** "If your monthly API spend consistently exceeds $100, our Growth and Pro tiers offer 10-15% bonus credits and higher rate limits. For spend above $2,000/month, we negotiate custom pricing. Email service@riskmodels.app or upgrade directly from your dashboard."
 
 ### 5.5 OpenAPI Spec Pricing Annotations
 
